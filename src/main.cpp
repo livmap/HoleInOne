@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
     int lineG = 255;
     int lineB = 0;
 
-    bool hitPhase = true;
+    bool hitPhase = false;
 
     // Game loop
     bool running = true;
@@ -134,6 +134,7 @@ int main(int argc, char* argv[]) {
 
         if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
             std::cout << "A button pressed!" << std::endl;
+
             hitPhase = true;
         }
 
@@ -141,20 +142,29 @@ int main(int argc, char* argv[]) {
         int xAxis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
         int yAxis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY);
 
-        if (xAxis > deadzone || xAxis < -deadzone) {
-            rect.w = 125 * (std::abs(xAxis) / maxAxis);
-        } else {
+        if(xAxis > deadzone || xAxis < -deadzone){
+            if(xAxis < 0){
+                rect.w = 125 * (-pythag(xAxis, yAxis) / maxAxis);
+            } else {
+                rect.w = 125 * (pythag(xAxis, yAxis) / maxAxis);
+            }
+
+        } else{
             rect.w = 0;
         }
 
-        float diff = (std::hypot(xAxis, yAxis) / maxAxis) * 255.00;
+
+        float diff = (pythag(xAxis, yAxis) / pythag(maxAxis, maxAxis)) * 255.00;
         lineR = diff;
         lineG = 255.00 - diff;
 
-        angle = atan2(yAxis, xAxis);
+        angle = atan((yAxis * 1.00) / (xAxis * 1.00));
 
-        SDL_Point lineEnd = {ball.x + static_cast<int>(rect.w * cos(angle)),
-                             ball.y + static_cast<int>(rect.w * sin(angle))};
+        // Normalize axis values and apply deadzone
+
+        SDL_Point lineEnd;
+        lineEnd.x = ball.x + (rect.w * cos(angle));
+        lineEnd.y = ball.y + (rect.w * sin(angle));
 
         SDL_RenderClear(renderer);
 
