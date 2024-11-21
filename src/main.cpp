@@ -65,22 +65,22 @@ int main(int argc, char* argv[]) {
 
     // Golf Ball
     GolfBall ball;
-    ball.x = 500;
-    ball.y = 350;
-    ball.w = 20;
-    ball.h = 20;
+    ball.setX(500);
+    ball.setY(350);
+    ball.setW(20);
+    ball.setH(20);
 
     SDL_Surface* imageSurface = loadImage("golfball.png");
     SDL_Texture* imageTexture = SDL_CreateTextureFromSurface(renderer, imageSurface);
     SDL_FreeSurface(imageSurface);
 
-    SDL_Rect destRect = {ball.x, ball.y, ball.w, ball.h};
+    SDL_Rect destRect = {ball.getX(), ball.getY(), ball.getW(), ball.getH()};
 
     SDL_Surface* compassSurface = loadImage("compass.png");
     SDL_Texture* compassTexture = SDL_CreateTextureFromSurface(renderer, compassSurface);
     SDL_FreeSurface(compassSurface);
 
-    SDL_Rect compassRect = {ball.x, ball.y, 50, 50};
+    SDL_Rect compassRect = {ball.getX(), ball.getY(), 50, 50};
 
     SDL_Surface* holeSurface = loadImage("hole.png");
     SDL_Texture* holeTexture = SDL_CreateTextureFromSurface(renderer, holeSurface);
@@ -88,13 +88,10 @@ int main(int argc, char* argv[]) {
 
     SDL_Rect holeRect = {800, 350, 25, 25};
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_Rect rect = {ball.x + (ball.w / 2), ball.y + (ball.h / 2), 0, 0};
-
-    SDL_Point center = {rect.w / 2, rect.y / 2};
 
     // Line
-    SDL_Point lineStart = {ball.x + (ball.w / 2), ball.y + (ball.h / 2)};
+    SDL_Point lineStart = {ball.getX() + (ball.getW() / 2), ball.getY() + (ball.getH() / 2)};
+    float lineWidth = 0;
 
     float maxX = 0;
     float maxY = 0;
@@ -122,6 +119,9 @@ int main(int argc, char* argv[]) {
             if (event.type == SDL_CONTROLLERBUTTONDOWN) {
                 if (event.cbutton.button == SDL_CONTROLLER_BUTTON_A) {
                     std::cout << "A button pressed!" << std::endl;
+
+
+
                 }
             }
 
@@ -132,11 +132,15 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        /*
+
         if (SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A)) {
             std::cout << "A button pressed!" << std::endl;
 
             hitPhase = true;
         }
+
+        */
 
         // Read joystick input
         int xAxis = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
@@ -144,13 +148,13 @@ int main(int argc, char* argv[]) {
 
         if(xAxis > deadzone || xAxis < -deadzone){
             if(xAxis < 0){
-                rect.w = 125 * (-pythag(xAxis, yAxis) / maxAxis);
+                lineWidth = 125 * (-pythag(xAxis, yAxis) / maxAxis);
             } else {
-                rect.w = 125 * (pythag(xAxis, yAxis) / maxAxis);
+                lineWidth = 125 * (pythag(xAxis, yAxis) / maxAxis);
             }
 
         } else{
-            rect.w = 0;
+            lineWidth = 0;
         }
 
 
@@ -163,8 +167,8 @@ int main(int argc, char* argv[]) {
         // Normalize axis values and apply deadzone
 
         SDL_Point lineEnd;
-        lineEnd.x = ball.x + (rect.w * cos(angle));
-        lineEnd.y = ball.y + (rect.w * sin(angle));
+        lineEnd.x = ball.getX() + (lineWidth * cos(angle));
+        lineEnd.y = ball.getY() + (lineWidth * sin(angle));
 
         SDL_RenderClear(renderer);
 
