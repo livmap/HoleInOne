@@ -29,7 +29,7 @@ pygame.display.set_caption("Pygame Boilerplate")
 world = World(0.08)
 
 ball = GolfBall(100, 100, 20, 20)
-ball.setHitVelocity(10)
+ball.setHitVelocity(15)
 
 aimAssist = AimAssist(50, 50, 0, 5, WHITE)
 
@@ -62,6 +62,7 @@ else:
     joystick = None
 
 running = True
+play = True
 
 count = 0
 
@@ -74,14 +75,15 @@ while running:
         # Joystick button press handling
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 0:  # A button is usually button 0 on Xbox controllers
-                if ball.getVelocity() == 0:
+                if ball.getVelocity() == 0 and play:
                     ball.vX = ball.hitVelocity * (axis_x / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
                     ball.vY = ball.hitVelocity * (axis_y / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
                     ball.xRatio = (axis_x / math.hypot(axis_x, axis_y))
                     ball.yRatio = (axis_y / math.hypot(axis_x, axis_y))
 
-    ball.x += ball.vX
-    ball.y += ball.vY
+    if play:
+        ball.x += ball.vX
+        ball.y += ball.vY
 
     # Applying Friction
     veloc = ball.getVelocity()
@@ -115,8 +117,13 @@ while running:
     if ball.getVelocity() > 1:
         num = int(count / (ball.hitVelocity - ball.getVelocity()))  % 2
         ball_image = ball_images[num]
-    screen.blit(ball_image, (ball.x, ball.y))
+    
     screen.blit(hole_img, (hole.x, hole.y))
+    if cartesian(ball.x, ball.y, hole.x, hole.y) < ((hole.w / 2) + (ball.w / 2)):
+        play = False
+    
+    if play:
+        screen.blit(ball_image, (ball.x, ball.y))
 
     # Update display
     pygame.display.flip()
