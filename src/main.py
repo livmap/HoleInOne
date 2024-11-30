@@ -35,8 +35,10 @@ aimAssist = AimAssist(50, 50, 0, 5, WHITE)
 # Load assets
 background = loadImage("background.png", SCREEN_WIDTH, SCREEN_HEIGHT)
 
-
-ball_image = loadImage("golfball.png", ball.w, ball.h)
+ball_images = []
+ball_images.append(loadImage("golfball1.png", ball.w, ball.h))
+ball_images.append(loadImage("golfball2.png", ball.w, ball.h))
+ball_image = ball_images[0]
 
 # Clock settings
 clock = pygame.time.Clock()
@@ -56,6 +58,8 @@ else:
     joystick = None
 
 running = True
+
+count = 0
 
 while running:
     # Event handling
@@ -104,10 +108,15 @@ while running:
 
     # Drawing
     screen.blit(background, (0, 0))
+    if ball.getVelocity() > 1:
+        num = int(count / (ball.hitVelocity - ball.getVelocity()))  % 2
+        ball_image = ball_images[num]
     screen.blit(ball_image, (ball.x, ball.y))
 
     # Update display
     pygame.display.flip()
+
+    count += 1
 
     # Control the frame rate
     clock.tick(FPS)
