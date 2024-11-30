@@ -66,10 +66,11 @@ while running:
         # Joystick button press handling
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 0:  # A button is usually button 0 on Xbox controllers
-                ball.vX = ball.hitVelocity * (axis_x / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
-                ball.vY = ball.hitVelocity * (axis_y / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
-                ball.xRatio = (axis_x / math.hypot(axis_x, axis_y))
-                ball.yRatio = (axis_y / math.hypot(axis_x, axis_y))
+                if ball.getVelocity() == 0:
+                    ball.vX = ball.hitVelocity * (axis_x / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
+                    ball.vY = ball.hitVelocity * (axis_y / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
+                    ball.xRatio = (axis_x / math.hypot(axis_x, axis_y))
+                    ball.yRatio = (axis_y / math.hypot(axis_x, axis_y))
 
     ball.x += ball.vX
     ball.y += ball.vY
