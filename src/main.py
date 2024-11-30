@@ -6,6 +6,7 @@ from utilities import *
 from golfball import *
 from world import *
 from aimAssist import *
+from hole import *
 
 # Initialize Pygame and joystick module
 pygame.init()
@@ -39,6 +40,9 @@ ball_images = []
 ball_images.append(loadImage("golfball1.png", ball.w, ball.h))
 ball_images.append(loadImage("golfball2.png", ball.w, ball.h))
 ball_image = ball_images[0]
+
+hole = Hole(900, 350, 25, 25)
+hole_img = loadImage("hole.png", hole.w, hole.h)
 
 # Clock settings
 clock = pygame.time.Clock()
@@ -112,6 +116,7 @@ while running:
         num = int(count / (ball.hitVelocity - ball.getVelocity()))  % 2
         ball_image = ball_images[num]
     screen.blit(ball_image, (ball.x, ball.y))
+    screen.blit(hole_img, (hole.x, hole.y))
 
     # Update display
     pygame.display.flip()
