@@ -128,7 +128,19 @@ while running:
         play = False
 
     screen.blit(obstacle_img, (obstacle.x, obstacle.y))
-    
+
+    hit = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, obstacle.x, obstacle.y, obstacle.w, obstacle.h)
+    if hit[0]:
+        s = hit[1]
+        if s == 1:
+            ball.xRatio = -(abs(ball.xRatio))
+        elif s == 2:
+            ball.yRatio = -(abs(ball.yRatio))
+        elif s == 3:
+            ball.xRatio = (abs(ball.xRatio))
+        elif s == 4:
+            ball.yRatio = abs(ball.yRatio)
+
     if play:
         screen.blit(ball_image, (ball.x, ball.y))
 
