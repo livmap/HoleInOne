@@ -85,6 +85,18 @@ while running:
         ball.vX = 0
         ball.vY = 0
 
+    if ball.x < 0:
+        ball.xRatio = abs(ball.xRatio)
+
+    if ball.x > (SCREEN_WIDTH - ball.w):
+        ball.xRatio = -(abs(ball.xRatio))
+
+    if ball.y < 0:
+        ball.yRatio = abs(ball.yRatio)
+
+    if ball.y > (SCREEN_HEIGHT - ball.h):
+        ball.yRatio = -(abs(ball.yRatio))
+
     # Joystick axis movement (e.g., move ball with left joystick)
     if joystick:
         axis_x = joystick.get_axis(0)  
