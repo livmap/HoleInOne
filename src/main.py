@@ -1,12 +1,14 @@
 import pygame
 import sys
 import math
+import random
 
 from utilities import *
 from golfball import *
 from world import *
 from aimAssist import *
 from hole import *
+from obstacle import *
 
 # Initialize Pygame and joystick module
 pygame.init()
@@ -28,7 +30,7 @@ pygame.display.set_caption("Pygame Boilerplate")
 
 world = World(0.08)
 
-ball = GolfBall(100, 100, 20, 20)
+ball = GolfBall(100, SCREEN_HEIGHT / 2, 20, 20)
 ball.setHitVelocity(15)
 
 aimAssist = AimAssist(50, 50, 0, 5, WHITE)
@@ -41,8 +43,11 @@ ball_images.append(loadImage("golfball1.png", ball.w, ball.h))
 ball_images.append(loadImage("golfball2.png", ball.w, ball.h))
 ball_image = ball_images[0]
 
-hole = Hole(900, 350, 25, 25)
+hole = Hole(900, random.randint(50, SCREEN_HEIGHT - 50), 25, 25)
 hole_img = loadImage("hole.png", hole.w, hole.h)
+
+obstacle = Obstacle(500, 400, w=50)
+obstacle_img = loadImage("obstacle.png", obstacle.w, obstacle.h)
 
 # Clock settings
 clock = pygame.time.Clock()
@@ -121,6 +126,8 @@ while running:
     screen.blit(hole_img, (hole.x, hole.y))
     if cartesian(ball.x, ball.y, hole.x, hole.y) < ((hole.w / 2) + (ball.w / 2)):
         play = False
+
+    screen.blit(obstacle_img, (obstacle.x, obstacle.y))
     
     if play:
         screen.blit(ball_image, (ball.x, ball.y))
