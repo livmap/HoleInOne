@@ -10,6 +10,7 @@ from aimAssist import *
 from hole import *
 from obstacle import *
 from sandPatch import *
+from holeLevel import *
 
 # Initialize Pygame and joystick module
 pygame.init()
@@ -74,7 +75,7 @@ else:
     print("No joystick detected!")
     joystick = None
 
-holeCount = 1
+
 parCount = 3
 
 font = pygame.font.Font('freesansbold.ttf', 15)
@@ -82,19 +83,80 @@ text = font.render(str(world.windSpeed) + " / " + str(world.windDirection), True
 textRect = text.get_rect()
 textRect.center = (900, 50)
 
-text2 = font.render("Hole: " + str(holeCount), True, BLACK)
+
 textRect2 = text.get_rect()
 textRect2.center = (100, 50)
 
-text3 = font.render("Par: " + str(parCount), True, BLACK)
 textRect3 = text.get_rect()
 textRect3.center = (200, 50)
 
+textRect4 = text.get_rect()
+textRect4.center = (300, 50)
+
 running = True
-play = True
+play = False
 
 count = 0
 
+
+holeCount = 0
+hits = 0
+holeLevel = None
+obstacles = []
+sandPatches = []
+
+def gameInit():
+    global obstacles
+    global sandPatches
+    global play
+    global holeCount
+    global hits
+    global ball
+
+    ball.x = 100
+    ball.y = SCREEN_HEIGHT / 2
+    ball.vX = 0
+    ball.vY = 0
+    ball.xRatio = 0
+    ball.yRatio = 0
+
+    play = True
+    holeCount += 1
+    obstacles = []
+    sandPatches = []
+    hits = 0
+    holeMove = False
+    holeMoveVeloc = 0
+    holeMoveRange = 0
+    obstacleCount = random.randint(1, 10)
+    sandPatchCount = random.randint(1, 5)
+    parSum = 0
+
+    for x in range(obstacleCount):
+        obstacles.append(Obstacle(random.randint(100, SCREEN_WIDTH - 100), random.randint(50, SCREEN_HEIGHT - 50), 50))
+
+    for y in range(sandPatchCount):
+        sandPatches.append(SandPatch(random.randint(100, SCREEN_WIDTH - 100), random.randint(50, SCREEN_HEIGHT - 50), random.randint(50, 100), random.randint(50, 100)))
+
+    holeMoveGuess = random.randint(0, 8000) % 2
+    if holeMoveGuess == 0:
+        holeMove = False
+    else:
+        holeMove = True
+
+    if holeMove:
+        holeMoveVeloc = random.randint(1, 10)
+        holeMoveRange = random.randint(100, 300)
+
+    if holeMove:
+        parSum += 5
+
+    parSum += obstacleCount + sandPatchCount
+
+    par = round(parSum / 4)
+
+    holeLevel = HoleLevel(sandPatchCount, obstacleCount, holeMove, par, holeMoveRange, holeMoveVeloc)
+    
 
 
 while running:
@@ -111,6 +173,10 @@ while running:
                     ball.vY = ball.hitVelocity * (axis_y / math.hypot(axis_x, axis_y)) * (math.hypot(axis_x, axis_y) / 1)
                     ball.xRatio = (axis_x / math.hypot(axis_x, axis_y))
                     ball.yRatio = (axis_y / math.hypot(axis_x, axis_y))
+                    hits += 1
+
+    if not play:
+        gameInit()
 
     if play:
         ball.x += ball.vX
@@ -155,44 +221,51 @@ while running:
         num = int(count / (ball.hitVelocity - ball.getVelocity()))  % 2
         ball_image = ball_images[num]
     
-    screen.blit(hole_img, (hole.x, hole.y))
+    
     if cartesian(ball.x + (ball.w  / 2), ball.y + (ball.h / 2), hole.x + (hole.w / 2), hole.y + (hole.h / 2)) < ((hole.w / 2) + (ball.w / 2)):
         play = False
+    
 
-    screen.blit(obstacle_img, (obstacle.x, obstacle.y))
+    for y in sandPatches:
+        pygame.draw.rect(screen, y.color, (y.x, y.y, y.w, y.h))
 
-    hitObs = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, obstacle.x, obstacle.y, obstacle.w, obstacle.h)
-    hitSand = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, sandPatch.x, sandPatch.y, sandPatch.w, sandPatch.h)
-    if hitObs[0]:
-        s = hitObs[1]
-        if s == 1:
-            ball.xRatio = -(abs(ball.xRatio))
-        elif s == 2:
-            ball.yRatio = -(abs(ball.yRatio))
-        elif s == 3:
-            ball.xRatio = (abs(ball.xRatio))
-        elif s == 4:
-            ball.yRatio = abs(ball.yRatio)
-
-    if hitSand[0]:
-        world.friction = world.friction * 2
-    else:
-        if world.rain:
-            world.friction = friction * 0.75
+        hitSand = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, y.x, y.y, y.w, y.h)
+        if hitSand[0]:
+            world.friction = world.friction * 2
         else:
-            world.friction = friction
+            if world.rain:
+                world.friction = friction * 0.75
+            else:
+                world.friction = friction
 
-    pygame.draw.rect(screen, sandPatch.color, (sandPatch.x, sandPatch.y, sandPatch.w, sandPatch.h))
+    for x in obstacles:
+        screen.blit(obstacle_img, (x.x, x.y))
+        hitObs = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, x.x, x.y, x.w, x.h)
+        if hitObs[0]:
+            s = hitObs[1]
+            if s == 1:
+                ball.xRatio = -(abs(ball.xRatio))
+            elif s == 2:
+                ball.yRatio = -(abs(ball.yRatio))
+            elif s == 3:
+                ball.xRatio = (abs(ball.xRatio))
+            elif s == 4:
+                ball.yRatio = abs(ball.yRatio)
 
     if play:
         screen.blit(ball_image, (ball.x, ball.y))
         
     
-
+    screen.blit(hole_img, (hole.x, hole.y))
     screen.blit(windArrow_img, (800, 50))
+    text2 = font.render("Hole: " + str(holeCount), True, BLACK)
+    text3 = font.render("Par: " + str(parCount), True, BLACK)
+    text4 = font.render("Hits: " + str(hits), True, BLACK)
     screen.blit(text, textRect)
     screen.blit(text2, textRect2)
     screen.blit(text3, textRect3)
+    screen.blit(text4, textRect4)
+    
 
     # Update display
     pygame.display.flip()
