@@ -1,6 +1,9 @@
 class World:
-    def __init__(self, f):
+    def __init__(self, f, ws, wd, r):
         self.friction = f
-        self.windSpeed = 0
-        self.windDirection = 0
-        self.rain = False
+        self.windSpeed = ws
+        self.windDirection = wd
+        self.rain = r
+
+        if self.rain:
+            self.friction = 0.75 * self.friction

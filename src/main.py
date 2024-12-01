@@ -9,6 +9,7 @@ from world import *
 from aimAssist import *
 from hole import *
 from obstacle import *
+from sandPatch import *
 
 # Initialize Pygame and joystick module
 pygame.init()
@@ -24,16 +25,22 @@ BLUE = (0, 0, 255)
 # Screen settings
 SCREEN_WIDTH, SCREEN_HEIGHT = 1000, 700
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Pygame Boilerplate")
+pygame.display.set_caption("HoleInOne")
 
 # Classes
 
-world = World(0.08)
+friction = 0.08
+world = World(friction, 3, 108, True)
+
 
 ball = GolfBall(100, SCREEN_HEIGHT / 2, 20, 20)
 ball.setHitVelocity(15)
 
-aimAssist = AimAssist(50, 50, 0, 5, WHITE)
+hole = Hole(900, random.randint(50, SCREEN_HEIGHT - 50), 25, 25)
+
+obstacle = Obstacle(500, 400, w=50)
+
+sandPatch = SandPatch(random.randint(100, SCREEN_WIDTH - 100), random.randint(50, SCREEN_HEIGHT - 50), random.randint(50, 100), random.randint(50, 100))
 
 # Load assets
 background = loadImage("background.png", SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -43,11 +50,12 @@ ball_images.append(loadImage("golfball1.png", ball.w, ball.h))
 ball_images.append(loadImage("golfball2.png", ball.w, ball.h))
 ball_image = ball_images[0]
 
-hole = Hole(900, random.randint(50, SCREEN_HEIGHT - 50), 25, 25)
 hole_img = loadImage("hole.png", hole.w, hole.h)
 
-obstacle = Obstacle(500, 400, w=50)
 obstacle_img = loadImage("obstacle.png", obstacle.w, obstacle.h)
+
+windArrow_img = loadImage("windArrow.png", 25, (25 / 266) * 500)
+windArrow_img = pygame.transform.rotate(windArrow_img, -world.windDirection)
 
 # Clock settings
 clock = pygame.time.Clock()
@@ -66,10 +74,28 @@ else:
     print("No joystick detected!")
     joystick = None
 
+holeCount = 1
+parCount = 3
+
+font = pygame.font.Font('freesansbold.ttf', 15)
+text = font.render(str(world.windSpeed) + " / " + str(world.windDirection), True, BLACK)
+textRect = text.get_rect()
+textRect.center = (900, 50)
+
+text2 = font.render("Hole: " + str(holeCount), True, BLACK)
+textRect2 = text.get_rect()
+textRect2.center = (100, 50)
+
+text3 = font.render("Par: " + str(parCount), True, BLACK)
+textRect3 = text.get_rect()
+textRect3.center = (200, 50)
+
 running = True
 play = True
 
 count = 0
+
+
 
 while running:
     # Event handling
@@ -89,7 +115,13 @@ while running:
     if play:
         ball.x += ball.vX
         ball.y += ball.vY
-
+        if ball.getVelocity() > 0:
+            if ball.x > 0 and ball.x < SCREEN_WIDTH - ball.w:
+                ball.x += (world.windSpeed / 5)  * math.cos(world.windDirection)
+            if ball.y > 0 and ball.y < SCREEN_HEIGHT - ball.h:
+                ball.y += (world.windSpeed / 5) * math.sin(world.windDirection)
+            
+        
     # Applying Friction
     veloc = ball.getVelocity()
     if veloc >= world.friction:
@@ -124,14 +156,15 @@ while running:
         ball_image = ball_images[num]
     
     screen.blit(hole_img, (hole.x, hole.y))
-    if cartesian(ball.x, ball.y, hole.x, hole.y) < ((hole.w / 2) + (ball.w / 2)):
+    if cartesian(ball.x + (ball.w  / 2), ball.y + (ball.h / 2), hole.x + (hole.w / 2), hole.y + (hole.h / 2)) < ((hole.w / 2) + (ball.w / 2)):
         play = False
 
     screen.blit(obstacle_img, (obstacle.x, obstacle.y))
 
-    hit = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, obstacle.x, obstacle.y, obstacle.w, obstacle.h)
-    if hit[0]:
-        s = hit[1]
+    hitObs = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, obstacle.x, obstacle.y, obstacle.w, obstacle.h)
+    hitSand = collision(ball.x + (ball.w / 2), ball.y + (ball.h / 2), ball.w / 2, sandPatch.x, sandPatch.y, sandPatch.w, sandPatch.h)
+    if hitObs[0]:
+        s = hitObs[1]
         if s == 1:
             ball.xRatio = -(abs(ball.xRatio))
         elif s == 2:
@@ -141,8 +174,25 @@ while running:
         elif s == 4:
             ball.yRatio = abs(ball.yRatio)
 
+    if hitSand[0]:
+        world.friction = world.friction * 2
+    else:
+        if world.rain:
+            world.friction = friction * 0.75
+        else:
+            world.friction = friction
+
+    pygame.draw.rect(screen, sandPatch.color, (sandPatch.x, sandPatch.y, sandPatch.w, sandPatch.h))
+
     if play:
         screen.blit(ball_image, (ball.x, ball.y))
+        
+    
+
+    screen.blit(windArrow_img, (800, 50))
+    screen.blit(text, textRect)
+    screen.blit(text2, textRect2)
+    screen.blit(text3, textRect3)
 
     # Update display
     pygame.display.flip()
