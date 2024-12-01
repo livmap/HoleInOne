@@ -116,6 +116,7 @@ textRect5 = text.get_rect()
 textRect5.center = (400, 50)
 
 running = True
+ended = False
 started = False
 play = False
 
@@ -129,8 +130,15 @@ holeLevel = None
 obstacles = []
 sandPatches = []
 noPlayCount = 0
+least = None
+most = 0 
+best = 100000000
+beaten = False
 
 def gameInit():
+
+    global ended
+    global started
     global obstacles
     global sandPatches
     global play
@@ -138,54 +146,125 @@ def gameInit():
     global hits
     global ball
     global holeLevel
-
-    ball.x = 100
-    ball.y = SCREEN_HEIGHT / 2
-    ball.vX = 0
-    ball.vY = 0
-    ball.xRatio = 0
-    ball.yRatio = 0
-
-    play = True
-    holeCount += 1
-    obstacles = []
-    sandPatches = []
-    hits = 0
-    holeMove = False
-    holeMoveVeloc = 0
-    holeMoveRange = 0
-    obstacleCount = random.randint(1, 10)
-    sandPatchCount = random.randint(1, 5)
-    parSum = 0
-
-    for x in range(obstacleCount):
-        obstacles.append(Obstacle(random.randint(100, SCREEN_WIDTH - 200), random.randint(50, SCREEN_HEIGHT - 50), 50))
-
-    for y in range(sandPatchCount):
-        sandPatches.append(SandPatch(random.randint(100, SCREEN_WIDTH - 200), random.randint(50, SCREEN_HEIGHT - 50), random.randint(50, 100), random.randint(50, 100)))
-
-    holeMoveGuess = random.randint(0, 8000) % 2
-    if holeMoveGuess == 0:
-        holeMove = False
-    else:
-        holeMove = True
-
-    if holeMove:
-        holeMoveVeloc = random.randint(1, 10)
-        holeMoveRange = random.randint(100, 300)
-
-    if holeMove:
-        parSum += 5
-
-    parSum += obstacleCount + sandPatchCount
-
-    par = round(parSum / 4)
-
-    holeLevel = HoleLevel(sandPatchCount, obstacleCount, holeMove, par, holeMoveRange, holeMoveVeloc)
-
-    hole.x = SCREEN_WIDTH - 100
-    hole.y = random.randint(50, SCREEN_HEIGHT - 50)
+    global least
+    global most
+    global best
+    global beaten
+    global text
+    global textRect
+    global textRect2
+    global textRect3
+    global textRect4
+    global textRect5
     
+
+    font = pygame.font.Font('freesansbold.ttf', 15)
+    text = font.render(str(world.windSpeed) + " / " + str(world.windDirection), True, BLACK)
+    textRect = text.get_rect()
+    textRect.center = (900, 50)
+
+
+    textRect2 = text.get_rect()
+    textRect2.center = (100, 50)
+
+    textRect3 = text.get_rect()
+    textRect3.center = (200, 50)
+
+    textRect4 = text.get_rect()
+    textRect4.center = (300, 50)
+
+    textRect5 = text.get_rect()
+    textRect5.center = (400, 50)
+
+    if holeCount < 2:
+
+        if holeCount == 0:
+            least = 100000000
+        else:
+            if hits < least:
+                least = hits
+            
+        if hits > most:
+            most = hits
+
+        ball.x = 100
+        ball.y = SCREEN_HEIGHT / 2
+        ball.vX = 0
+        ball.vY = 0
+        ball.xRatio = 0
+        ball.yRatio = 0
+
+        play = True
+        holeCount += 1
+        obstacles = []
+        sandPatches = []
+        hits = 0
+        holeMove = False
+        holeMoveVeloc = 0
+        holeMoveRange = 0
+        obstacleCount = random.randint(1, 10)
+        sandPatchCount = random.randint(1, 5)
+        parSum = 0
+
+        for x in range(obstacleCount):
+            obstacles.append(Obstacle(random.randint(100, SCREEN_WIDTH - 200), random.randint(50, SCREEN_HEIGHT - 50), 50))
+
+        for y in range(sandPatchCount):
+            sandPatches.append(SandPatch(random.randint(100, SCREEN_WIDTH - 200), random.randint(50, SCREEN_HEIGHT - 50), random.randint(50, 100), random.randint(50, 100)))
+
+        holeMoveGuess = random.randint(0, 8000) % 2
+        if holeMoveGuess == 0:
+            holeMove = False
+        else:
+            holeMove = True
+
+        if holeMove:
+            holeMoveVeloc = random.randint(1, 10)
+            holeMoveRange = random.randint(100, 300)
+
+        if holeMove:
+            parSum += 5
+
+        parSum += obstacleCount + sandPatchCount
+
+        par = round(parSum / 4)
+
+        holeLevel = HoleLevel(sandPatchCount, obstacleCount, holeMove, par, holeMoveRange, holeMoveVeloc)
+
+        hole.x = SCREEN_WIDTH - 100
+        hole.y = random.randint(50, SCREEN_HEIGHT - 50)
+    else:
+
+        if hits < least:
+                least = hits
+
+        if hits > most:
+            most = hits
+
+        file = open("/Users/princemaphupha/Desktop/Games/HoleInOne/src/games.txt", "r")
+        lines = file.readlines()
+        scores = []
+        res = []
+        
+        for sub in lines:
+            res.append(sub.replace("\n", ""))
+        for w in res:
+            scores.append(int(w))
+
+        for x in scores:
+            if x < best:
+                best = x
+        
+        if total_hits < best:
+            beaten = True
+            best = total_hits
+
+        file.close()
+        file = open("/Users/princemaphupha/Desktop/Games/HoleInOne/src/games.txt", "a")
+        file.write(str(total_hits) + "\n")
+        file.close()
+        started = False
+        ended = True
 
 
 while running:
@@ -309,35 +388,102 @@ while running:
         clock.tick(FPS)
 
     else:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+        if not ended:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                # Set the x, y postions of the mouse click
-                x, y = event.pos
-                if x > buttonImageX and x < buttonImageX + buttonImageWidth:
-                    if y > buttonImageY(1) and y < buttonImageY(1) + buttonImageHeight:
-                        # Play
-                        started = True
-                    elif y > buttonImageY(2) and y < buttonImageY(2) + buttonImageHeight:
-                        running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    # Set the x, y postions of the mouse click
+                    x, y = event.pos
+                    if x > buttonImageX and x < buttonImageX + buttonImageWidth:
+                        if y > buttonImageY(1) and y < buttonImageY(1) + buttonImageHeight:
+                            # Play
 
-        screen.blit(starter_img, (0, 0))
-        if int(count / 60) % 2 == 0:
-            screen.blit(logos[0], (logoX, logoY))
-        else:
-            screen.blit(logos[1], (logoX, logoY))
-        screen.blit(play_img, (buttonImageX, buttonImageY(1)))
-        screen.blit(exit_img, (buttonImageX, buttonImageY(2)))
+                            total_hits = 0
+                            least = 0
+                            most = 0
+                            best = 100000000
+                            ended = False
+                            started = True
+                            play = False
+                            holeCount = 0
 
+                            started = True
+                        elif y > buttonImageY(2) and y < buttonImageY(2) + buttonImageHeight:
+                            # Exit
+                            running = False
+
+            screen.blit(starter_img, (0, 0))
+            if int(count / 60) % 2 == 0:
+                screen.blit(logos[0], (logoX, logoY))
+
+            else:
+                screen.blit(logos[1], (logoX, logoY))
+
+            screen.blit(play_img, (buttonImageX, buttonImageY(1)))
+            screen.blit(exit_img, (buttonImageX, buttonImageY(2)))
+
+            pygame.display.flip()
+
+            count += 1
+
+            clock.tick(FPS)
         
+        else:
 
-        pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-        count += 1
+            screen.fill(BLACK)
 
-        clock.tick(FPS)
+            font1 = pygame.font.Font('freesansbold.ttf', 16)
+            font2 = pygame.font.Font('freesansbold.ttf', 30)
+
+            text = font2.render("Game Complete", True, WHITE)
+            textRect = text.get_rect()
+            textRect.center = ((SCREEN_WIDTH - 300) / 2, 200)
+
+            text2 = font.render("Total Hits: " + str(total_hits), True, WHITE)
+            textRect2 = text2.get_rect()
+            textRect2.center = ((SCREEN_WIDTH - 200) / 2, 250)
+
+
+            text3 = None
+            if beaten:
+                text3 = font.render("Best: " + str(best), True, GREEN)
+            else:
+                text3 = font.render("Best: " + str(best), True, WHITE)
+            
+            textRect3 = text3.get_rect()
+            textRect3.center = ((SCREEN_WIDTH - 200) / 2, 300)
+    
+
+            text4 = font.render("Least Hits in Round: " + str(least), True, WHITE)
+            textRect4 = text4.get_rect()
+            textRect4.center = ((SCREEN_WIDTH - 200) / 2, 400)
+
+            text5 = font.render("Most Hits in Round: " + str(most), True, WHITE)
+            textRect5 = text5.get_rect()
+            textRect5.center = ((SCREEN_WIDTH - 200) / 2, 450)
+
+            screen.blit(text, textRect)
+            screen.blit(text2, textRect2)
+            screen.blit(text3, textRect3)
+            screen.blit(text4, textRect4)
+            screen.blit(text5, textRect5)
+
+            pygame.display.flip()
+
+            count += 1
+
+            clock.tick(FPS)
+
+            pygame.time.wait(6000)
+
+            ended = False
+        
 
 pygame.quit()
 sys.exit()
